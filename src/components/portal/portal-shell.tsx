@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
 import { type LucideIcon, House } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { sidebarItems } from "@/lib/sidebar";
+import { type PortalRole } from "@/lib/pams";
 
 export type SidebarItem =
   | { type: "link"; label: string; href: string; icon: LucideIcon }
@@ -13,16 +15,16 @@ export type SidebarItem =
   | { type: "logout" };
 
 interface PortalShellProps {
-  role: string;
+  role: PortalRole;
   roleLabel: string;
   roleGroup: string;
   userName: string;
-  items: SidebarItem[];
   children: ReactNode;
 }
 
-export function PortalShell({ role, roleLabel, roleGroup, userName, items, children }: PortalShellProps) {
+export function PortalShell({ role, roleLabel, roleGroup, userName, children }: PortalShellProps) {
   const pathname = usePathname();
+  const items = sidebarItems[role];
 
   return (
     <div className="flex min-h-screen bg-background">

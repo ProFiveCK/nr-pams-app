@@ -3,7 +3,6 @@ import { type ReactNode } from "react";
 import { auth } from "@/auth";
 import { PortalShell } from "@/components/portal/portal-shell";
 import { roleByKey, type PortalRole } from "@/lib/pams";
-import { sidebarItems } from "@/lib/sidebar";
 
 interface PortalLayoutProps {
   children: ReactNode;
@@ -24,7 +23,6 @@ export default async function PortalLayout({ children, params }: PortalLayoutPro
     redirect("/login");
   }
 
-  const items = sidebarItems[portalRole];
   const userName = session.user.name ?? session.user.email ?? "User";
 
   return (
@@ -33,7 +31,6 @@ export default async function PortalLayout({ children, params }: PortalLayoutPro
       roleLabel={details.label}
       roleGroup={details.group}
       userName={userName}
-      items={items}
     >
       {children}
     </PortalShell>
