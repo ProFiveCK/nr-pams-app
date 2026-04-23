@@ -12,7 +12,7 @@ if (!connectionString) {
 const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
-const demoPassword = "PamsDemo2026!";
+const seedUserPassword = getSeedUserPassword();
 
 const users: Array<{
   fullName: string;
@@ -57,8 +57,16 @@ const users: Array<{
   { fullName: "PAMS Admin", email: "admin@nauru.gov.nr", role: "ADMIN" },
 ];
 
+function getSeedUserPassword() {
+  const password = process.env.SEED_USER_PASSWORD;
+  if (!password || password.length < 12) {
+    throw new Error("SEED_USER_PASSWORD must be set to a non-default password with at least 12 characters.");
+  }
+  return password;
+}
+
 async function main() {
-  const passwordHash = await hash(demoPassword, 10);
+  const passwordHash = await hash(seedUserPassword, 10);
 
   for (const user of users) {
     await prisma.user.upsert({
@@ -93,7 +101,7 @@ async function main() {
     });
   }
 
-  console.log("Seed complete. Demo password:", demoPassword);
+  console.log("Seed complete. Seeded users use the password from SEED_USER_PASSWORD.");
 }
 
 main()

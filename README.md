@@ -55,6 +55,7 @@ npx prisma migrate deploy
 Seed demo users, if needed:
 
 ```bash
+export SEED_USER_PASSWORD="set-a-temporary-password-here"
 npm run db:seed
 ```
 
@@ -77,11 +78,7 @@ After seeding, these users are available:
 - `finance@nauru.gov.nr`
 - `admin@nauru.gov.nr`
 
-Demo password:
-
-```text
-PamsDemo2026!
-```
+Demo users use the password provided in `SEED_USER_PASSWORD` when `npm run db:seed` is executed. Do not commit or reuse that temporary password in production.
 
 ## Production Deployment
 
