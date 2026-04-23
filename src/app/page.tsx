@@ -64,12 +64,9 @@ export default async function Home() {
             </div>
 
             <div className="space-y-4">
-              <h1 className="max-w-xl text-2xl font-bold tracking-[-0.04em] text-[#0a253d] sm:text-3xl lg:text-4xl">
+              <h1 className="max-w-xl text-2xl font-bold tracking-[-0.04em] text-brand-accent sm:text-3xl lg:text-4xl">
                 Streamlined aviation permit processing.
               </h1>
-              <p className="max-w-xl text-base leading-8 text-brand-accent font-medium">
-                Submit, review, approve, and track landing or overflight permits through one professional workflow.
-              </p>
             </div>
 
             <div className="grid gap-3 sm:max-w-xl sm:grid-cols-1">
