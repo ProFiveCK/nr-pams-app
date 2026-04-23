@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
-import { type LucideIcon, House } from "lucide-react";
+import { type LucideIcon, House, Bell } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
 import { sidebarItems } from "@/lib/sidebar";
 import { type PortalRole } from "@/lib/pams";
@@ -124,7 +124,7 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, children }: 
               />
             </div>
             <button type="button" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-500 transition hover:bg-panel-strong" title="Notifications">
-              🔔
+              <Bell size={16} strokeWidth={2} />
             </button>
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white">
               {userName.slice(0, 2).toUpperCase()}

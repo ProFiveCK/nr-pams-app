@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { CheckCircle2, BookOpen } from "lucide-react";
 import { type CatalogItem } from "@/lib/service-catalog";
 
 type LineItem = {
@@ -118,7 +119,9 @@ export function InvoiceGeneratePanel({
   if (invoiceNumber && invoiceId) {
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 space-y-3 text-center">
-        <p className="text-3xl">✅</p>
+        <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+          <CheckCircle2 size={24} strokeWidth={2} />
+        </span>
         <p className="font-semibold text-emerald-800">Invoice Generated</p>
         <p className="font-mono text-sm text-emerald-700">{invoiceNumber}</p>
         <a
@@ -137,7 +140,10 @@ export function InvoiceGeneratePanel({
       {/* Service catalog quick-pick */}
       {catalogItems.length > 0 && (
         <div className="rounded-xl border border-brand/20 bg-brand/5 p-4 space-y-2">
-          <p className="text-xs font-semibold text-brand">🗂️ Service Catalog — click to add a line item</p>
+          <p className="text-xs font-semibold text-brand flex items-center gap-1.5">
+            <BookOpen size={13} strokeWidth={2} />
+            Service Catalog — click to add a line item
+          </p>
           <div className="flex flex-wrap gap-2">
             {catalogItems.map((item) => (
               <button

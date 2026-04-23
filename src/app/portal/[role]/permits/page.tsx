@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { FileCheck2 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 
 export default async function PermitsPage() {
@@ -54,7 +55,9 @@ export default async function PermitsPage() {
         </div>
         {permits.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <p className="text-4xl">📄</p>
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              <FileCheck2 size={24} strokeWidth={1.5} />
+            </span>
             <p className="mt-3 text-sm font-semibold text-slate-700">No permits found</p>
             <p className="mt-1 text-xs text-slate-500">
               Permits will appear here once an application is approved and issued.

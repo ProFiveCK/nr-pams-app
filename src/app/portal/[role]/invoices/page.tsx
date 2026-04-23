@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { CheckCircle2, Receipt } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { roleByKey, type PortalRole } from "@/lib/pams";
@@ -170,7 +171,12 @@ export default async function InvoicesPage({ params, searchParams }: Props) {
 
         {rows.length === 0 ? (
           <div className="px-5 py-16 text-center">
-            <p className="text-4xl">{showOutstanding ? "✅" : "🧾"}</p>
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+              {showOutstanding
+                ? <CheckCircle2 size={24} strokeWidth={1.5} />
+                : <Receipt size={24} strokeWidth={1.5} />
+              }
+            </span>
             <p className="mt-3 text-sm font-semibold text-slate-700">
               {showOutstanding ? "All invoices are settled" : "No invoices yet"}
             </p>

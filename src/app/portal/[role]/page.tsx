@@ -403,7 +403,7 @@ export default async function RolePage({ params }: RolePageProps) {
                 <p className="text-2xl font-bold text-red-700">
                   {applicantStats.totalOwing.toLocaleString("en-AU", { style: "currency", currency: "AUD" })}
                 </p>
-                <a href="/portal/applicant/invoices" className="mt-auto text-[11px] font-semibold text-red-600 hover:underline">View invoices →</a>
+                <a href="/portal/applicant/invoices" className="mt-auto inline-flex items-center rounded-full border border-red-300 bg-white px-3 py-1 text-[11px] font-semibold text-red-700 hover:bg-red-50 transition">View invoices →</a>
               </div>
             </div>
           )}

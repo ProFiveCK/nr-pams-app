@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import { Scale } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { MinisterDecisionButtons } from "@/components/workflow/minister-decision-buttons";
 
@@ -41,7 +42,9 @@ export default async function MinisterDecisionsPage({ params }: Props) {
 
       {applications.length === 0 ? (
         <div className="rounded-2xl border border-line bg-white px-8 py-16 text-center">
-          <p className="text-4xl">⚖️</p>
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400">
+            <Scale size={24} strokeWidth={1.5} />
+          </span>
           <p className="mt-3 text-sm font-semibold text-slate-700">No applications pending decision</p>
           <p className="mt-1 text-xs text-slate-500">
             When the Manager forwards an application for approval, it will appear here.

@@ -1,5 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { Receipt, FileCheck2 } from "lucide-react";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { type PortalRole } from "@/lib/pams";
@@ -261,7 +262,9 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
           {application.pamsInvoice ? (
             <div className="flex items-center justify-between gap-4 rounded-2xl border border-teal-200 bg-teal-50 px-6 py-4">
               <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-lg text-white">🧾</span>
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white">
+                  <Receipt size={16} strokeWidth={2} />
+                </span>
                 <div>
                   <p className="text-sm font-semibold text-teal-800">Invoice Generated</p>
                   <p className="font-mono text-xs text-teal-600">{application.pamsInvoice.invoiceNumber}</p>
@@ -278,7 +281,9 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
             ["EMPLOYEE", "FINANCE", "ADMIN"].includes(session.user.role ?? "") && (
               <div className="rounded-2xl border-2 border-brand/30 bg-brand/5 p-6 space-y-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-lg text-white">🧾</span>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+                    <Receipt size={16} strokeWidth={2} />
+                  </span>
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-widest text-brand/60">Next Step</p>
                     <h2 className="text-base font-bold text-brand">Generate Invoice</h2>
@@ -356,7 +361,9 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
           {application.permit && (
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 space-y-4">
               <div className="flex items-center gap-2">
-                <span className="text-lg">📄</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
+                  <FileCheck2 size={14} strokeWidth={2} />
+                </span>
                 <h2 className="text-sm font-semibold text-emerald-800">Permit Issued</h2>
               </div>
               <dl className="space-y-3 text-sm">
@@ -389,7 +396,8 @@ export default async function ApplicationDetailPage({ params }: PageProps) {
                 href={`/portal/${portalRole}/permits/${application.permit.id}`}
                 className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-white border border-emerald-300 px-4 py-2 text-xs font-semibold text-emerald-800 hover:bg-emerald-50 transition"
               >
-                📄 View Official Permit
+                <FileCheck2 size={13} strokeWidth={2} />
+                View Official Permit
               </Link>
             </div>
           )}
