@@ -33,8 +33,10 @@ body {
   background-attachment: fixed;
 }
 
-a {
-  color: inherit;
+@layer base {
+  a {
+    color: inherit;
+  }
 }
 
 ::selection {
