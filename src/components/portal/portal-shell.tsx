@@ -4,10 +4,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { type ReactNode } from "react";
+import { type LucideIcon, House } from "lucide-react";
 import { LogoutButton } from "@/components/auth/logout-button";
 
 export type SidebarItem =
-  | { type: "link"; label: string; href: string; icon: string }
+  | { type: "link"; label: string; href: string; icon: LucideIcon }
   | { type: "divider" }
   | { type: "logout" };
 
@@ -72,12 +73,12 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, items, child
                         : "font-medium text-slate-600 hover:bg-slate-50 hover:text-brand"
                     }`}
                   >
-                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[15px] leading-none transition-colors ${
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg transition-colors ${
                       isActive
                         ? "bg-brand text-white shadow-sm"
                         : "bg-slate-100 group-hover:bg-brand/10 group-hover:text-brand"
                     }`}>
-                      {item.icon}
+                      <item.icon size={15} strokeWidth={2} />
                     </span>
                     <span className="truncate">{item.label}</span>
                     {isActive && (
@@ -96,7 +97,9 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, items, child
             href="/"
             className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand"
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[15px] leading-none">🏠</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+              <House size={15} strokeWidth={2} />
+            </span>
             <span>Home</span>
           </Link>
           <LogoutButton variant="sidebar" />

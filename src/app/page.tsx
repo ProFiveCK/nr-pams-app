@@ -1,13 +1,29 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Mail, Phone, MapPin } from "lucide-react";
 import { auth } from "@/auth";
 import { getPortalPathForUserRole } from "@/lib/pams";
 
-const workflowPoints = [
-  "Landing and overflight permit applications",
-  "Internal review and minister approval workflow",
-  "Permit issuance and finance reporting support",
+const contactItems = [
+  {
+    icon: Mail,
+    label: "Email Support",
+    value: "support@naurufinance.info",
+    href: "mailto:support@naurufinance.info",
+  },
+  {
+    icon: Phone,
+    label: "Civil Aviation Office",
+    value: "+674 557 3133",
+    href: "tel:+6745573133",
+  },
+  {
+    icon: MapPin,
+    label: "Location",
+    value: "Yaren District, Republic of Nauru",
+    href: null,
+  },
 ] as const;
 
 export default async function Home() {
@@ -51,20 +67,35 @@ export default async function Home() {
               <h1 className="max-w-xl text-2xl font-bold tracking-[-0.04em] text-[#0a253d] sm:text-3xl lg:text-4xl">
                 Streamlined aviation permit processing.
               </h1>
-              <p className="max-w-xl text-base leading-8 text-slate-600">
+              <p className="max-w-xl text-base leading-8 text-brand-accent font-medium">
                 Submit, review, approve, and track landing or overflight permits through one professional workflow.
               </p>
             </div>
 
             <div className="grid gap-3 sm:max-w-xl sm:grid-cols-1">
-              {workflowPoints.map((point) => (
-                <div key={point} className="group flex items-start gap-3 rounded-2xl border border-white/75 bg-white/72 px-4 py-3 shadow-[0_10px_22px_rgba(20,59,86,0.05)] transition-all duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-md">
-                  <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand transition-colors group-hover:bg-[#083d59]">
-                    <span className="h-2 w-2 rounded-full bg-white" />
-                  </span>
-                  <p className="text-sm leading-6 text-slate-700 group-hover:text-slate-900">{point}</p>
-                </div>
-              ))}
+              {contactItems.map((item) => {
+                const Icon = item.icon;
+                const inner = (
+                  <>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand/10 text-brand transition-colors group-hover:bg-brand group-hover:text-white">
+                      <Icon size={16} strokeWidth={2} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-slate-400">{item.label}</p>
+                      <p className="truncate text-sm font-medium text-slate-800 group-hover:text-brand">{item.value}</p>
+                    </div>
+                  </>
+                );
+                return item.href ? (
+                  <a key={item.label} href={item.href} className="group flex items-center gap-3 rounded-2xl border border-white/75 bg-white/72 px-4 py-3 shadow-[0_10px_22px_rgba(20,59,86,0.05)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
+                    {inner}
+                  </a>
+                ) : (
+                  <div key={item.label} className="group flex items-center gap-3 rounded-2xl border border-white/75 bg-white/72 px-4 py-3 shadow-[0_10px_22px_rgba(20,59,86,0.05)]">
+                    {inner}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
