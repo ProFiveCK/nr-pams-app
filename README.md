@@ -1,58 +1,74 @@
 # Nauru PAMS Web
 
-Phase 1 implementation foundation for the Permit Application Management System (PAMS):
-- Landing and overflight permit application workflow
-- Internal review and minister web approval flow
-- Permit issuance with unique permit numbers
-- Invoice-reference report output for manual FMIS invoicing
+Permit Application Management System (PAMS) web application for landing and overflight permit workflows.
 
-## Getting Started
+## Features
+
+- Airline/operator self-registration with admin approval.
+- Role-based dashboards for Applicant, Civil Aviation Officer, Manager, Minister, Finance, and Admin users.
+- Permit application submission and internal review workflow.
+- Minister decision flow and permit issuance.
+- Finance invoice-reference handoff views for manual FMIS processing.
+- Self-service forgot-password flow with SMTP-configured reset emails.
+- Admin SMTP settings screen and user-management dashboard links.
+
+## Tech Stack
+
+- Next.js 16 App Router
+- React 19
+- NextAuth v5 credentials authentication
+- Prisma 7
+- PostgreSQL
+- Tailwind CSS
+- Nodemailer for password reset email delivery
+
+## Local Setup
 
 Install dependencies:
 
 ```bash
-npm install
+npm ci
 ```
 
-Start development server:
+Create local environment config:
 
 ```bash
-npm run dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-## Database Setup (PostgreSQL)
-
-1. Update `DATABASE_URL` in `.env`.
-2. Generate Prisma client:
+Update `.env` for your local PostgreSQL database:
 
 ```bash
-npx prisma generate
+DATABASE_URL="postgresql://postgres:password@localhost:5433/pams"
+NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+NEXTAUTH_URL="http://localhost:3002"
+AUTH_TRUST_HOST=true
+NEXT_PUBLIC_APP_URL="http://localhost:3002"
 ```
 
-3. Create first migration (after validating schema):
+Apply database migrations:
 
 ```bash
-npx prisma migrate dev --name init_pams
+npx prisma migrate deploy
 ```
 
-4. Seed demo users:
+Seed demo users, if needed:
 
 ```bash
 npm run db:seed
 ```
 
-## Authentication Setup
-
-Set auth environment values in `.env`:
+Start the development server:
 
 ```bash
-NEXTAUTH_SECRET="replace-with-a-long-random-secret"
-NEXTAUTH_URL="http://localhost:3000"
+npm run dev
 ```
 
-Demo accounts after seeding (same password):
+By default, Next dev serves at `http://localhost:3000` unless you pass another port.
+
+## Demo Accounts
+
+After seeding, these users are available:
 
 - `applicant@nauru.gov.nr`
 - `employee@nauru.gov.nr`
@@ -63,49 +79,107 @@ Demo accounts after seeding (same password):
 
 Demo password:
 
-- `PamsDemo2026!`
-
-## Project Structure
-
-- `src/app`: App Router pages
-- `src/app/portal/[role]/page.tsx`: role-specific portal entry pages
-- `src/app/applications/new/page.tsx`: permit submission form shell
-- `src/app/reports/invoice-reference/page.tsx`: finance handoff report shell
-- `src/lib/pams.ts`: role and workflow domain constants
-- `prisma/schema.prisma`: core Phase 1 data model
-
-## Ubuntu Deployment Baseline
-
-Target environment: Ubuntu 22.04 or 24.04 LTS
-
-1. Install runtime dependencies:
-
-```bash
-sudo apt update
-sudo apt install -y nginx postgresql postgresql-contrib
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt install -y nodejs
+```text
+PamsDemo2026!
 ```
 
-2. Build app:
+## Production Deployment
+
+Clone the repository:
+
+```bash
+git clone https://github.com/ProFiveCK/nr-pams-app.git
+cd nr-pams-app
+```
+
+Install dependencies:
 
 ```bash
 npm ci
+```
+
+Create production `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Set production values:
+
+- `DATABASE_URL`: PostgreSQL connection string for the production database.
+- `NEXTAUTH_SECRET`: long random secret.
+- `NEXTAUTH_URL`: public app URL, for example `https://pams.example.gov.nr`.
+- `AUTH_TRUST_HOST`: set to `true` behind a reverse proxy.
+- `NEXT_PUBLIC_APP_URL`: public app URL used in password reset links.
+
+Apply migrations:
+
+```bash
+npx prisma migrate deploy
+```
+
+Build:
+
+```bash
 npm run build
 ```
 
-3. Run app via process manager (`pm2` or `systemd`).
-4. Configure Nginx reverse proxy to port 3000.
-5. Enable HTTPS with Let's Encrypt (`certbot`).
-6. Configure automated PostgreSQL backups.
+Start:
 
-## Next Implementation Steps
+```bash
+npm run start -- -p 3002
+```
 
-- Add Auth.js-based authentication and RBAC middleware.
-- Implement server actions/API for application submission and workflow transitions.
-- Connect minister decisions to permit issuance service and PDF generation.
-- Build CSV/PDF report export from real database records.
+For production, run the app behind a process manager such as `pm2` or `systemd`, then configure Nginx or another reverse proxy to forward HTTPS traffic to port `3002`.
+
+## Docker Notes
+
+The included `Dockerfile` builds the web app only. If deploying with Docker Compose, provide a PostgreSQL service and pass the same environment variables listed above to the app container.
+
+After rebuilding the app container:
+
+```bash
+docker compose up -d --build pams-web
+```
+
+Run migrations against the production database before client testing:
+
+```bash
+docker compose exec pams-web npx prisma migrate deploy
+```
+
+## SMTP And Password Reset
+
+Forgot-password emails require SMTP settings.
+
+1. Sign in as an admin.
+2. Open `Admin > System Settings`.
+3. Fill in SMTP host, port, TLS/SSL, username/password if required, and sender address.
+4. Save settings.
+5. Use `Forgot password?` on the login page to test reset email delivery.
+
+Password reset links expire after 60 minutes and are single-use.
+
+## Useful Commands
+
+```bash
+npm run lint
+npm run build
+npm run db:generate
+npx prisma migrate status
+npx prisma migrate deploy
+npm run db:seed
+```
+
+## Project Structure
+
+- `src/app`: Next.js App Router pages and API routes.
+- `src/components`: Auth, admin, portal, and workflow UI components.
+- `src/lib`: Prisma, auth helpers, workflow services, mail, and domain constants.
+- `prisma/schema.prisma`: Database schema.
+- `prisma/migrations`: Versioned database migrations.
+- `prisma/seed.ts`: Demo account seed script.
 
 ## Notes
 
-FMIS integration is intentionally excluded in this phase. The finance report output is the official handoff mechanism for manual invoice creation in FMIS.
+FMIS integration is intentionally excluded in this phase. Finance users use the invoice-reference handoff screens for manual FMIS processing.
