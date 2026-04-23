@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/auth";
 import { ProfileForm } from "@/components/auth/profile-form";
 import { prisma } from "@/lib/prisma";
@@ -20,6 +21,12 @@ export default async function ProfilePage() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 items-center px-6 py-10">
       <section className="w-full rounded-3xl border border-line bg-panel p-7 shadow-sm">
+        <Link
+          href="/portal"
+          className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand"
+        >
+          ← Back to Dashboard
+        </Link>
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-accent">Nauru PAMS</p>
         <h1 className="mt-2 text-2xl font-semibold text-brand">Airline Profile</h1>
         <p className="mt-2 text-sm text-slate-700">

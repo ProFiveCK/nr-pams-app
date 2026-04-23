@@ -1,12 +1,13 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
 export default async function PermitsPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const role = session.user.role;
+  const role = session.user.role.toLowerCase();
   
   // Fetch permits based on role
   const permits = await prisma.permit.findMany({
@@ -91,12 +92,12 @@ export default async function PermitsPage() {
                       {new Date(permit.permitIssuedAt).toLocaleDateString("en-AU")}
                     </td>
                     <td className="px-5 py-4">
-                      <button
-                        type="button"
-                        className="rounded-lg border border-line px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:border-brand hover:text-brand"
+                      <Link
+                        href={`/portal/${role}/permits/${permit.id}`}
+                        className="rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100"
                       >
-                        Download PDF
-                      </button>
+                        View Permit
+                      </Link>
                     </td>
                   </tr>
                 ))}

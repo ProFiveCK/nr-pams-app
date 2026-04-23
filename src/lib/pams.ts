@@ -86,7 +86,7 @@ const portalByUserRole = {
   EMPLOYEE: "employee",
   MANAGER: "manager",
   MINISTER: "minister",
-  FINANCE: "finance",
+  FINANCE: "employee", // Finance users share the employee portal
   ADMIN: "admin",
 } as const;
 

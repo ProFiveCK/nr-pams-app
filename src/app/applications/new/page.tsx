@@ -20,6 +20,12 @@ export default async function NewApplicationPage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 py-10 lg:px-10">
+      <Link
+        href="/portal"
+        className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-brand"
+      >
+        ← Back to Dashboard
+      </Link>
       <section className="rounded-3xl border border-line bg-panel p-6 sm:p-8">
         <h1 className="text-2xl font-semibold text-brand sm:text-3xl">New Permit Application</h1>
         <p className="mt-2 text-sm leading-7 text-slate-700">

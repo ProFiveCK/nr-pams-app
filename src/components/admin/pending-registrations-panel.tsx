@@ -74,7 +74,7 @@ export function PendingRegistrationsPanel({
               </div>
 
               <div className="flex items-center gap-3">
-                <p className="text-xs text-slate-500">Submitted {new Date(item.createdAt).toLocaleDateString()}</p>
+                <p className="text-xs text-slate-500">Submitted {new Date(item.createdAt).toLocaleDateString("en-AU")}</p>
                 <button
                   type="button"
                   onClick={() => approve(item.id)}

@@ -1,26 +1,10 @@
 "use client";
 
 import { useState } from "react";
-
-type Service = {
-  id: string;
-  name: string;
-  rate: string;
-  uom: string;
-  description: string;
-  published: boolean;
-};
-
-const DEMO_SERVICES: Service[] = [
-  { id: "SVC-001", name: "Landing Permit – Scheduled", rate: "AUD 850.00", uom: "per permit", description: "Standard landing permit for scheduled airline operations.", published: true },
-  { id: "SVC-002", name: "Landing Permit – Charter", rate: "AUD 650.00", uom: "per permit", description: "Landing permit for charter flight operations.", published: true },
-  { id: "SVC-003", name: "Overflight Permit", rate: "AUD 400.00", uom: "per permit", description: "Non-stop overflight through Nauruan airspace.", published: true },
-  { id: "SVC-004", name: "Landing Permit – Cargo", rate: "AUD 950.00", uom: "per permit", description: "Dedicated cargo aircraft landing permit.", published: true },
-  { id: "SVC-005", name: "Emergency Landing", rate: "AUD 0.00", uom: "per permit", description: "Waived fee for declared emergency landings.", published: false },
-];
+import { SERVICE_CATALOG, type CatalogItem } from "@/lib/service-catalog";
 
 export default function ServiceCatalogPage() {
-  const [services] = useState(DEMO_SERVICES);
+  const [services] = useState<CatalogItem[]>(SERVICE_CATALOG);
 
   return (
     <div className="space-y-6">
@@ -65,7 +49,9 @@ export default function ServiceCatalogPage() {
                 <tr key={svc.id} className="hover:bg-panel-strong/40 transition-colors">
                   <td className="px-5 py-4 font-mono text-xs font-semibold text-slate-600">{svc.id}</td>
                   <td className="px-5 py-4 font-medium text-slate-800">{svc.name}</td>
-                  <td className="px-5 py-4 font-semibold text-brand">{svc.rate}</td>
+                  <td className="px-5 py-4 font-semibold text-brand">
+                    {svc.unitPrice.toLocaleString("en-AU", { style: "currency", currency: "AUD" })}
+                  </td>
                   <td className="px-5 py-4 text-xs text-slate-500">{svc.uom}</td>
                   <td className="px-5 py-4 text-xs text-slate-600 max-w-xs truncate">{svc.description}</td>
                   <td className="px-5 py-4">

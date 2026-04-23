@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useState } from "react";
 
 const permitTypes = [
@@ -268,7 +269,26 @@ export function NewApplicationForm({
       </label>
 
       {error ? <p className="sm:col-span-2 text-sm font-medium text-red-700">{error}</p> : null}
-      {success ? <p className="sm:col-span-2 text-sm font-medium text-green-700">{success}</p> : null}
+      {success ? (
+        <div className="sm:col-span-2 rounded-xl border border-green-200 bg-green-50 px-4 py-3">
+          <p className="text-sm font-medium text-green-700">{success}</p>
+          <div className="mt-3 flex flex-wrap gap-3">
+            <Link
+              href="/portal"
+              className="rounded-full bg-brand px-5 py-2 text-sm font-semibold text-white transition hover:bg-[#013a58]"
+            >
+              Go to Dashboard
+            </Link>
+            <button
+              type="button"
+              onClick={() => setSuccess(null)}
+              className="rounded-full border border-line bg-white px-5 py-2 text-sm font-semibold text-slate-700 transition hover:bg-panel-strong"
+            >
+              Submit Another
+            </button>
+          </div>
+        </div>
+      ) : null}
 
       <div className="sm:col-span-2 flex flex-wrap gap-3 pt-2">
         <button

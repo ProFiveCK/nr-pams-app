@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 
 type QueueRole = "applicant" | "employee" | "manager" | "minister";
@@ -124,19 +125,25 @@ export function RoleQueue({ role, initialItems }: { role: QueueRole; initialItem
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <article key={item.id} className="rounded-2xl border border-line bg-panel-strong p-4">
+              <article key={item.id} className="rounded-2xl border border-line bg-panel-strong p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-mono text-xs text-slate-600">{item.applicationRef}</p>
                   <h3 className="text-base font-semibold text-brand">{item.operatorName}</h3>
                   <p className="text-xs text-slate-700">
-                    {item.permitType} | {item.aircraftRegistration} | {item.status}
+                    {item.permitType} | {item.aircraftRegistration} | {item.status.replace(/_/g, " ")}
                   </p>
                 </div>
 
-                {role !== "applicant" ? (
-                  <div className="flex flex-wrap gap-2">
-                    {actionMap[role].map((action) => (
+                <div className="flex flex-wrap items-center gap-2">
+                  <Link
+                    href={`/portal/${role}/applications/${item.id}`}
+                    className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 transition hover:border-brand hover:text-brand"
+                  >
+                    View Details
+                  </Link>
+                  {role !== "applicant" &&
+                    actionMap[role].map((action) => (
                       <button
                         key={action.label}
                         type="button"
@@ -147,8 +154,7 @@ export function RoleQueue({ role, initialItems }: { role: QueueRole; initialItem
                         {action.label}
                       </button>
                     ))}
-                  </div>
-                ) : null}
+                </div>
               </div>
             </article>
           ))}

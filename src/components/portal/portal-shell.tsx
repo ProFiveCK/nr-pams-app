@@ -27,36 +27,26 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, items, child
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <aside className="fixed inset-y-0 left-0 z-20 flex w-60 flex-col border-r border-line bg-white">
-        {/* Brand */}
-        <div className="flex items-center gap-3 border-b border-line px-5 py-5">
-          <Image
-            src="/government-logo.png"
-            alt="Republic of Nauru crest"
-            width={36}
-            height={38}
-            className="h-9 w-9 shrink-0 object-contain"
-            priority
-          />
-          <div className="min-w-0">
-            <p className="truncate text-[11px] font-semibold uppercase tracking-widest text-brand-accent">
-              {roleGroup}
-            </p>
-            <p className="truncate text-sm font-bold text-brand leading-tight">{roleLabel}</p>
-          </div>
-        </div>
-
-        {/* User identity */}
-        <div className="border-b border-line px-5 py-3">
-          <Link 
-            href={`/portal/${role}/profile`} 
-            className="flex items-center gap-2.5 rounded-xl p-1 transition hover:bg-panel-strong group"
+        {/* Brand + User identity */}
+        <div className="border-b border-line px-5 py-4">
+          <Link
+            href={`/portal/${role}/profile`}
+            className="flex items-center gap-3 rounded-xl p-1 transition hover:bg-panel-strong group"
           >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-white group-hover:bg-[#013a58]">
-              {userName.slice(0, 2).toUpperCase()}
-            </div>
+            <Image
+              src="/government-logo.png"
+              alt="Republic of Nauru crest"
+              width={36}
+              height={38}
+              className="h-9 w-9 shrink-0 object-contain"
+              priority
+            />
             <div className="min-w-0">
-              <p className="truncate text-xs font-semibold text-slate-800">{userName}</p>
-              <p className="truncate text-[10px] text-slate-500 uppercase tracking-wide">{roleLabel}</p>
+              <p className="truncate text-[11px] font-semibold uppercase tracking-widest text-brand-accent">
+                {roleGroup}
+              </p>
+              <p className="truncate text-sm font-bold text-brand leading-tight">{roleLabel}</p>
+              <p className="truncate text-xs text-slate-500 mt-0.5">{userName}</p>
             </div>
           </Link>
         </div>
@@ -76,14 +66,23 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, items, child
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className={`flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors ${
+                    className={`group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all ${
                       isActive
-                        ? "bg-brand text-white"
-                        : "text-slate-700 hover:bg-panel-strong hover:text-brand"
+                        ? "bg-brand/[0.09] text-brand font-semibold ring-1 ring-brand/20"
+                        : "font-medium text-slate-600 hover:bg-slate-50 hover:text-brand"
                     }`}
                   >
-                    <span className="text-base leading-none">{item.icon}</span>
-                    <span>{item.label}</span>
+                    <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-[15px] leading-none transition-colors ${
+                      isActive
+                        ? "bg-brand text-white shadow-sm"
+                        : "bg-slate-100 group-hover:bg-brand/10 group-hover:text-brand"
+                    }`}>
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                    {isActive && (
+                      <span className="ml-auto h-1.5 w-1.5 shrink-0 rounded-full bg-brand" />
+                    )}
                   </Link>
                 </li>
               );
@@ -95,9 +94,9 @@ export function PortalShell({ role, roleLabel, roleGroup, userName, items, child
         <div className="border-t border-line px-4 py-3 space-y-1">
           <Link
             href="/"
-            className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-panel-strong hover:text-brand"
+            className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-slate-600 transition hover:bg-slate-50 hover:text-brand"
           >
-            <span className="text-base">🏠</span>
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-[15px] leading-none">🏠</span>
             <span>Home</span>
           </Link>
           <LogoutButton variant="sidebar" />

@@ -136,15 +136,123 @@ export default async function RolePage({ params }: RolePageProps) {
     adminStats = { pendingRegistrations: rows.length, totalApplications, pendingMinisterDecisions, permitsIssued, activeUsers };
   }
 
-  // Finance stats
-  let financeStats: { readyForInvoicing: number; handedToFmis: number; pendingFollowUp: number } | null = null;
-  if (session?.user?.role === "FINANCE" && portalRole === "finance") {
-    const [readyForInvoicing, handedToFmis] = await prisma.$transaction([
-      prisma.application.count({ where: { status: "PERMIT_ISSUED" } }),
-      prisma.application.count({ where: { status: "INVOICE_REFERENCE_CREATED" } }),
+  // Applicant stats
+  let applicantStats: {
+    total: number;
+    inProgress: number;
+    permitsIssued: number;
+    rejected: number;
+    totalOwing: number;
+  } | null = null;
+
+  if (session?.user?.id && session.user.role === "APPLICANT" && portalRole === "applicant") {
+    const [total, inProgress, permitsIssued, rejected, owingAgg] = await prisma.$transaction([
+      prisma.application.count({ where: { applicantId: session.user.id } }),
+      prisma.application.count({
+        where: {
+          applicantId: session.user.id,
+          status: { in: ["SUBMITTED", "UNDER_REVIEW", "CORRECTION_REQUESTED", "MANAGER_REVIEW", "MINISTER_PENDING", "APPROVED"] },
+        },
+      }),
+      prisma.application.count({
+        where: {
+          applicantId: session.user.id,
+          status: { in: ["PERMIT_ISSUED", "INVOICE_REFERENCE_CREATED"] },
+        },
+      }),
+      prisma.application.count({ where: { applicantId: session.user.id, status: "REJECTED" } }),
+      prisma.pamsInvoice.aggregate({
+        where: { applicantId: session.user.id, status: { in: ["UNPAID", "PARTIAL"] } },
+        _sum: { totalAmount: true, amountPaid: true },
+      }),
     ]);
-    financeStats = { readyForInvoicing, handedToFmis, pendingFollowUp: 0 };
+    const owing =
+      Number(owingAgg._sum.totalAmount ?? 0) - Number(owingAgg._sum.amountPaid ?? 0);
+    applicantStats = { total, inProgress, permitsIssued, rejected, totalOwing: owing };
   }
+
+  // Employee stats
+  let employeeStats: {
+    newSubmissions: number;
+    underReview: number;
+    correctionRequested: number;
+    forwardedToManager: number;
+  } | null = null;
+
+  let invoiceStats: {
+    awaitingInvoice: number;
+    unpaid: number;
+    overdue: number;
+    totalOwing: number;
+  } | null = null;
+
+  if (
+    (session?.user?.role === "EMPLOYEE" || session?.user?.role === "FINANCE") &&
+    portalRole === "employee"
+  ) {
+    const now = new Date();
+    const [newSubmissions, underReview, correctionRequested, forwardedToManager, awaitingInvoice, unpaidInvoices, overdueInvoices, owingAgg] =
+      await prisma.$transaction([
+        prisma.application.count({ where: { status: "SUBMITTED" } }),
+        prisma.application.count({ where: { status: "UNDER_REVIEW" } }),
+        prisma.application.count({ where: { status: "CORRECTION_REQUESTED" } }),
+        prisma.application.count({ where: { status: "MANAGER_REVIEW" } }),
+        // Permits issued but no PamsInvoice yet
+        prisma.application.count({
+          where: { status: { in: ["PERMIT_ISSUED", "INVOICE_REFERENCE_CREATED"] }, pamsInvoice: null },
+        }),
+        prisma.pamsInvoice.count({ where: { status: { in: ["UNPAID", "PARTIAL"] } } }),
+        prisma.pamsInvoice.count({
+          where: { status: { in: ["UNPAID", "PARTIAL"] }, dueAt: { lt: now } },
+        }),
+        prisma.pamsInvoice.aggregate({
+          where: { status: { in: ["UNPAID", "PARTIAL"] } },
+          _sum: { totalAmount: true, amountPaid: true },
+        }),
+      ]);
+
+    employeeStats = { newSubmissions, underReview, correctionRequested, forwardedToManager };
+    const owing =
+      Number(owingAgg._sum.totalAmount ?? 0) - Number(owingAgg._sum.amountPaid ?? 0);
+    invoiceStats = { awaitingInvoice, unpaid: unpaidInvoices, overdue: overdueInvoices, totalOwing: owing };
+  }
+
+  // Manager stats
+  let managerStats: {
+    awaitingReview: number;
+    withMinister: number;
+    permitsIssued: number;
+    rejected: number;
+  } | null = null;
+
+  if (session?.user?.role === "MANAGER" && portalRole === "manager") {
+    const [awaitingReview, withMinister, permitsIssued, rejected] = await prisma.$transaction([
+      prisma.application.count({ where: { status: "MANAGER_REVIEW" } }),
+      prisma.application.count({ where: { status: "MINISTER_PENDING" } }),
+      prisma.application.count({ where: { status: { in: ["PERMIT_ISSUED", "INVOICE_REFERENCE_CREATED"] } } }),
+      prisma.application.count({ where: { status: "REJECTED" } }),
+    ]);
+    managerStats = { awaitingReview, withMinister, permitsIssued, rejected };
+  }
+
+  // Minister stats
+  let ministerStats: {
+    awaitingDecision: number;
+    permitsApproved: number;
+    rejected: number;
+  } | null = null;
+
+  if (session?.user?.role === "MINISTER" && portalRole === "minister") {
+    const [awaitingDecision, permitsApproved, rejected] = await prisma.$transaction([
+      prisma.application.count({ where: { status: "MINISTER_PENDING" } }),
+      prisma.application.count({ where: { status: { in: ["PERMIT_ISSUED", "INVOICE_REFERENCE_CREATED"] } } }),
+      prisma.application.count({ where: { status: "REJECTED" } }),
+    ]);
+    ministerStats = { awaitingDecision, permitsApproved, rejected };
+  }
+
+  // Finance stats block removed — Finance users now access the employee portal.
+  // Finance-specific counters are included in invoiceStats above.
 
   return (
     <div className="space-y-8">
@@ -170,7 +278,7 @@ export default async function RolePage({ params }: RolePageProps) {
             <QuickLink label="User Management" href="/portal/admin/users" description="Activate, deactivate, and manage user accounts" />
             <QuickLink label="Application Queue" href="/portal/employee" description="View the full civil aviation review queue" />
             <QuickLink label="Minister Decisions" href="/portal/minister" description="Track pending and completed minister approvals" />
-            <QuickLink label="Finance Handoff" href="/portal/finance/invoice-references" description="View the FMIS invoice reference report" />
+            <QuickLink label="Invoice Register" href="/portal/employee/invoices" description="View all PAMS invoices and track payments" />
             <QuickLink label="System Settings" href="/portal/admin/settings" description="Manage numbering sequences and system configuration" />
           </div>
         </>
@@ -181,49 +289,132 @@ export default async function RolePage({ params }: RolePageProps) {
         <PendingRegistrationsPanel sectionId="pending-registrations" initialItems={pendingRegistrations} />
       )}
 
-      {/* Finance stats */}
-      {financeStats && (
+      {/* Employee + Finance stats */}
+      {employeeStats && (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatCard label="Ready for Invoicing" value={financeStats.readyForInvoicing} accent />
-            <StatCard label="Handed to FMIS" value={financeStats.handedToFmis} />
-            <StatCard label="Pending Follow-up" value={financeStats.pendingFollowUp} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="New Submissions" value={employeeStats.newSubmissions} accent href="/portal/employee/applications" />
+            <StatCard label="Under Review" value={employeeStats.underReview} href="/portal/employee/applications" />
+            <StatCard label="Correction Requested" value={employeeStats.correctionRequested} href="/portal/employee/applications" />
+            <StatCard label="Forwarded to Manager" value={employeeStats.forwardedToManager} href="/portal/employee/applications" />
           </div>
+
+          {invoiceStats && (
+            <>
+              <div>
+                <p className="mb-3 text-sm font-semibold text-slate-700">Invoice Overview</p>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                  <StatCard
+                    label="Awaiting Invoice"
+                    value={invoiceStats.awaitingInvoice}
+                    accent={invoiceStats.awaitingInvoice > 0}
+                    href="/portal/employee/applications"
+                  />
+                  <StatCard
+                    label="Unpaid / Part Paid"
+                    value={invoiceStats.unpaid}
+                    href="/portal/employee/invoices"
+                  />
+                  <StatCard
+                    label="Overdue"
+                    value={invoiceStats.overdue}
+                    accent={invoiceStats.overdue > 0}
+                    href="/portal/employee/invoices"
+                  />
+                  <div className="rounded-2xl border border-red-200 bg-red-50 p-5">
+                    <p className="text-xs font-medium text-red-600 uppercase tracking-wide">Total Owing</p>
+                    <p className="mt-2 text-2xl font-bold text-red-700">
+                      {invoiceStats.totalOwing.toLocaleString("en-AU", { style: "currency", currency: "AUD" })}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <QuickLink label="Invoice References" href="/portal/finance/invoice-references" description="View all permits ready for FMIS manual invoice creation" />
-            <QuickLink label="Export Report" href="/portal/finance/exports" description="Download CSV or PDF of the current period invoice data" />
-            <QuickLink label="Handover Log" href="/portal/finance/handover-log" description="Track which invoices have been handed over to FMIS" />
+            <QuickLink label="Review Queue" href="/portal/employee/applications" description="Open applications waiting for civil aviation officer review" />
+            <QuickLink label="Issued Permits" href="/portal/employee/permits" description="Browse all permits issued through the workflow" />
+            <QuickLink label="Invoice Register" href="/portal/employee/invoices" description="Outstanding invoices, record payments and track balances" />
           </div>
         </>
       )}
 
-      {/* Manager quick actions */}
-      {portalRole === "manager" && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickLink label="Service Catalog" href="/portal/manager/service-catalog" description="Manage permit service rates and UoM" />
-          <QuickLink label="Invoice Reminder" href="/portal/manager/invoice-reminder" description="Follow up on outstanding invoice carriers" />
-          <QuickLink label="Signatures" href="/portal/manager/signatures" description="Upload and manage authorised signatures" />
-          <QuickLink label="Reports" href="/portal/manager/reports" description="Generate and download period reports" />
-        </div>
+      {/* Manager stats */}
+      {managerStats && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <StatCard label="Awaiting Your Review" value={managerStats.awaitingReview} accent href="/portal/manager/applications" />
+            <StatCard label="With Minister" value={managerStats.withMinister} href="/portal/manager/applications" />
+            <StatCard label="Permits Issued" value={managerStats.permitsIssued} href="/portal/manager/permits" />
+            <StatCard label="Rejected" value={managerStats.rejected} href="/portal/manager/applications" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <QuickLink label="Review Queue" href="/portal/manager/applications" description="Applications forwarded by Civil Aviation for your sign-off" />
+            <QuickLink label="Service Catalog" href="/portal/manager/service-catalog" description="Manage permit service rates and UoM" />
+            <QuickLink label="Signatures" href="/portal/manager/signatures" description="Upload and manage authorised signatures" />
+            <QuickLink label="Reports" href="/portal/manager/reports" description="Generate and download period reports" />
+          </div>
+        </>
       )}
 
-      {/* Minister quick actions */}
-      {portalRole === "minister" && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <QuickLink label="Decisions Queue" href="/portal/minister/decisions" description="Review permit applications awaiting your decision" />
-          <QuickLink label="Signed Permits" href="/portal/minister/permits" description="View all permits you have approved" />
-          <QuickLink label="Reports" href="/portal/minister/reports" description="Summary reports by period and permit type" />
-        </div>
+      {/* Minister stats */}
+      {ministerStats && (
+        <>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <StatCard label="Awaiting Your Decision" value={ministerStats.awaitingDecision} accent href="/portal/minister/decisions" />
+            <StatCard label="Permits Approved" value={ministerStats.permitsApproved} href="/portal/minister/permits" />
+            <StatCard label="Rejected" value={ministerStats.rejected} href="/portal/minister/decisions" />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <QuickLink label="Decisions Queue" href="/portal/minister/decisions" description="Review permit applications awaiting your decision" />
+            <QuickLink label="Signed Permits" href="/portal/minister/permits" description="View all permits you have approved" />
+            <QuickLink label="Reports" href="/portal/minister/reports" description="Summary reports by period and permit type" />
+          </div>
+        </>
       )}
 
-      {/* Applicant quick actions */}
+      {/* Applicant stats + actions */}
       {portalRole === "applicant" && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <QuickLink label="Submit Application" href="/applications/new" description="Lodge a new landing or overflight request" />
-          <QuickLink label="My Applications" href="/portal/applicant/applications" description="Track the status of all your submissions" />
-          <QuickLink label="My Permits" href="/portal/applicant/permits" description="View and download issued permits" />
-          <QuickLink label="Invoices" href="/portal/applicant/invoices" description="View outstanding and paid invoices" />
-        </div>
+        <>
+          {/* New Application CTA */}
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-brand/20 bg-brand/5 px-5 py-4">
+            <div>
+              <p className="text-sm font-semibold text-brand">Ready to apply?</p>
+              <p className="mt-0.5 text-xs text-slate-600">Lodge a new landing or overflight permit request.</p>
+            </div>
+            <Link
+              href="/applications/new"
+              className="shrink-0 rounded-full bg-brand px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#013a58]"
+            >
+              + New Application
+            </Link>
+          </div>
+
+          {/* Stat cards */}
+          {applicantStats && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+              <StatCard label="Total Applications" value={applicantStats.total} href="/portal/applicant/applications" />
+              <StatCard label="In Progress" value={applicantStats.inProgress} accent href="/portal/applicant/applications" />
+              <StatCard label="Permits Issued" value={applicantStats.permitsIssued} href="/portal/applicant/permits" />
+              <StatCard label="Rejected" value={applicantStats.rejected} href="/portal/applicant/applications" />
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-5 flex flex-col gap-1">
+                <p className="text-xs font-semibold uppercase tracking-wide text-red-600">Total Owing</p>
+                <p className="text-2xl font-bold text-red-700">
+                  {applicantStats.totalOwing.toLocaleString("en-AU", { style: "currency", currency: "AUD" })}
+                </p>
+                <a href="/portal/applicant/invoices" className="mt-auto text-[11px] font-semibold text-red-600 hover:underline">View invoices →</a>
+              </div>
+            </div>
+          )}
+
+          {/* Quick links */}
+          <div className="grid gap-4 sm:grid-cols-3">
+            <QuickLink label="My Applications" href="/portal/applicant/applications" description="Track the status of all your submissions" />
+            <QuickLink label="My Permits" href="/portal/applicant/permits" description="View and download issued permits" />
+            <QuickLink label="Invoices" href="/portal/applicant/invoices" description="View outstanding and paid invoices" />
+          </div>
+        </>
       )}
 
       {/* Applications queue */}

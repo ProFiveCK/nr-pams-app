@@ -5,12 +5,13 @@ Permit Application Management System (PAMS) web application for landing and over
 ## Features
 
 - Airline/operator self-registration with admin approval.
-- Role-based dashboards for Applicant, Civil Aviation Officer, Manager, Minister, Finance, and Admin users.
+- Role-based dashboards for Applicant, Civil Aviation Officer, Manager, Minister, and Admin users.
 - Permit application submission and internal review workflow.
 - Minister decision flow and permit issuance.
-- Finance invoice-reference handoff views for manual FMIS processing.
+- Full invoice lifecycle — generate invoices from a service catalog, record payments, track outstanding and overdue balances.
+- CSV export of invoice register for external accounting/FMIS import.
 - Self-service forgot-password flow with SMTP-configured reset emails.
-- Admin SMTP settings screen and user-management dashboard links.
+- Admin SMTP settings screen and user-management dashboard.
 
 ## Tech Stack
 
@@ -22,21 +23,26 @@ Permit Application Management System (PAMS) web application for landing and over
 - Tailwind CSS
 - Nodemailer for password reset email delivery
 
-## Local Setup
+## Setup & Deployment
 
-Install dependencies:
+This app is deployed with Docker Compose. You do not need to install Node.js on the server.
+
+Clone the repository:
 
 ```bash
-npm ci
+git clone https://github.com/ProFiveCK/nr-pams-app.git
+cd nr-pams-app
 ```
 
-Create local environment config:
+Create the environment file and generate secrets:
 
 ```bash
 cp .env.example .env
+openssl rand -base64 32   # use output as NEXTAUTH_SECRET
+openssl rand -base64 18   # use output as SEED_USER_PASSWORD
 ```
 
-Update `.env` for your local PostgreSQL database:
+Edit `.env` and set these values:
 
 ```bash
 POSTGRES_USER="pams_user"
@@ -44,80 +50,21 @@ POSTGRES_PASSWORD="set-a-strong-database-password"
 POSTGRES_DB="pams"
 POSTGRES_PORT=5433
 PAMS_WEB_PORT=3002
+
 DATABASE_URL="postgresql://pams_user:set-a-strong-database-password@localhost:5433/pams"
-NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
-NEXTAUTH_URL="http://localhost:3002"
+NEXTAUTH_SECRET="paste-openssl-rand-base64-32-output-here"
+NEXTAUTH_URL="https://your-production-domain"
 AUTH_TRUST_HOST=true
-NEXT_PUBLIC_APP_URL="http://localhost:3002"
+NEXT_PUBLIC_APP_URL="https://your-production-domain"
+SEED_USER_PASSWORD="paste-temporary-seed-password-here"
 ```
 
-Apply database migrations:
+For a server without a domain yet, use the server IP:
 
 ```bash
-npx prisma migrate deploy
+NEXTAUTH_URL="http://SERVER_IP:3002"
+NEXT_PUBLIC_APP_URL="http://SERVER_IP:3002"
 ```
-
-Seed demo users, if needed:
-
-```bash
-export SEED_USER_PASSWORD="set-a-temporary-password-here"
-npm run db:seed
-```
-
-Start the development server:
-
-```bash
-npm run dev
-```
-
-By default, Next dev serves at `http://localhost:3000` unless you pass another port.
-
-## Demo Accounts
-
-After seeding, these users are available:
-
-- `applicant@nauru.gov.nr`
-- `employee@nauru.gov.nr`
-- `manager@nauru.gov.nr`
-- `minister@nauru.gov.nr`
-- `finance@nauru.gov.nr`
-- `admin@nauru.gov.nr`
-
-Demo users use the password provided in `SEED_USER_PASSWORD` when `npm run db:seed` is executed. Do not commit or reuse that temporary password in production.
-
-## Production Deployment
-
-Production deployment is Docker-first. Clone the repository:
-
-```bash
-git clone https://github.com/ProFiveCK/nr-pams-app.git
-cd nr-pams-app
-```
-
-Create production `.env` from the committed example:
-
-```bash
-cp .env.example .env
-```
-
-Generate secrets:
-
-```bash
-openssl rand -base64 32
-```
-
-Edit `.env` and set real production values:
-
-- `POSTGRES_USER`: database username, for example `pams_user`.
-- `POSTGRES_PASSWORD`: strong database password.
-- `POSTGRES_DB`: database name, for example `pams`.
-- `POSTGRES_PORT`: host-only PostgreSQL port, for example `5433`.
-- `PAMS_WEB_PORT`: host web port, for example `3002`.
-- `NEXTAUTH_SECRET`: long random secret from `openssl rand -base64 32`.
-- `NEXTAUTH_URL`: public app URL, for example `https://pams.example.gov.nr`.
-- `AUTH_TRUST_HOST`: set to `true` behind a reverse proxy.
-- `NEXT_PUBLIC_APP_URL`: public app URL used in password reset links.
-- `SEED_USER_PASSWORD`: temporary initial password used only when creating seeded login accounts.
 
 Start PostgreSQL and the web app:
 
@@ -131,93 +78,73 @@ Apply database migrations:
 docker compose --profile tools run --rm pams-migrate
 ```
 
-Create initial login accounts, if needed:
+Create initial login accounts:
 
 ```bash
 docker compose --profile tools run --rm pams-seed
 ```
 
-After seeding, sign in with one of the demo account emails below and the password from `SEED_USER_PASSWORD`. Change or disable seeded accounts before live production use.
-
-Configure Nginx or another reverse proxy to forward HTTPS traffic to `PAMS_WEB_PORT`.
-
-## Docker Notes
-
-The repo includes a full Docker Compose stack for the web app, PostgreSQL, migrations, and optional seed-user creation.
-
-First-time Docker setup:
+Check status:
 
 ```bash
-cp .env.example .env
-openssl rand -base64 32
+docker compose ps
 ```
 
-Edit `.env` and set strong production values for:
+Open the app at `http://SERVER_IP:3002` or your configured domain.
 
-- `POSTGRES_PASSWORD`
-- `NEXTAUTH_SECRET`
-- `NEXTAUTH_URL`
-- `NEXT_PUBLIC_APP_URL`
-- `SEED_USER_PASSWORD`, only if you plan to seed demo users
+## Demo Accounts
 
-Build and start PostgreSQL plus the app:
+After seeding, these accounts are available (password is `SEED_USER_PASSWORD`):
 
-```bash
-docker compose up -d --build pams-postgres pams-web
-```
+- `applicant@nauru.gov.nr` — Operator / Airline
+- `employee@nauru.gov.nr` — Civil Aviation Officer
+- `manager@nauru.gov.nr` — Manager
+- `minister@nauru.gov.nr` — Minister
+- `finance@nauru.gov.nr` — Finance (shares the employee portal)
+- `admin@nauru.gov.nr` — System Administrator
 
-Apply migrations:
+Do not reuse the seed password in production. Change or disable seeded accounts before go-live.
 
-```bash
-docker compose --profile tools run --rm pams-migrate
-```
-
-Seed demo users, if needed:
+## Updating Production
 
 ```bash
-docker compose --profile tools run --rm pams-seed
-```
-
-Restart after pulling changes:
-
-```bash
+cd nr-pams-app
 git pull origin main
 docker compose up -d --build pams-web
 docker compose --profile tools run --rm pams-migrate
+docker compose ps
 ```
 
-## SMTP And Password Reset
+## SMTP and Password Reset
 
 Forgot-password emails require SMTP settings.
 
 1. Sign in as an admin.
-2. Open `Admin > System Settings`.
-3. Fill in SMTP host, port, TLS/SSL, username/password if required, and sender address.
+2. Open **Admin → System Settings**.
+3. Fill in SMTP host, port, TLS/SSL, credentials, and sender address.
 4. Save settings.
-5. Use `Forgot password?` on the login page to test reset email delivery.
+5. Use **Forgot password?** on the login page to test reset email delivery.
 
 Password reset links expire after 60 minutes and are single-use.
 
-## Useful Commands
+## Useful Docker Commands
 
 ```bash
-npm run lint
-npm run build
-npm run db:generate
-npx prisma migrate status
-npx prisma migrate deploy
-npm run db:seed
+docker compose ps                                          # check status
+docker compose logs -f pams-web                           # web logs
+docker compose logs -f pams-postgres                      # database logs
+docker compose restart pams-web                           # restart app
+docker compose down                                        # stop (data preserved)
+docker compose up -d pams-postgres pams-web               # start again
 ```
+
+> Do **not** run `docker compose down -v` unless you intentionally want to delete the PostgreSQL data volume.
 
 ## Project Structure
 
-- `src/app`: Next.js App Router pages and API routes.
-- `src/components`: Auth, admin, portal, and workflow UI components.
-- `src/lib`: Prisma, auth helpers, workflow services, mail, and domain constants.
-- `prisma/schema.prisma`: Database schema.
-- `prisma/migrations`: Versioned database migrations.
-- `prisma/seed.ts`: Demo account seed script.
-
-## Notes
-
-FMIS integration is intentionally excluded in this phase. Finance users use the invoice-reference handoff screens for manual FMIS processing.
+- `src/app` — Next.js App Router pages and API routes.
+- `src/components` — Auth, admin, portal, and workflow UI components.
+- `src/lib` — Prisma, auth helpers, workflow services, mail, and domain constants.
+- `prisma/schema.prisma` — Database schema.
+- `prisma/migrations` — Versioned database migrations.
+- `prisma/seed.ts` — Demo account seed script.

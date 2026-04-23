@@ -59,8 +59,8 @@ const users: Array<{
 
 function getSeedUserPassword() {
   const password = process.env.SEED_USER_PASSWORD;
-  if (!password || password.length < 12) {
-    throw new Error("SEED_USER_PASSWORD must be set to a non-default password with at least 12 characters.");
+  if (!password || password.length < 8) {
+    throw new Error("SEED_USER_PASSWORD must be set to a non-default password with at least 8 characters.");
   }
   return password;
 }
