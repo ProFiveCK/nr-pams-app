@@ -1,65 +1,99 @@
 import Image from "next/image";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { auth } from "@/auth";
+import { getPortalPathForUserRole } from "@/lib/pams";
 
-export default function Home() {
+const workflowPoints = [
+  "Landing and overflight permit applications",
+  "Internal review and minister approval workflow",
+  "Permit issuance and finance reporting support",
+] as const;
+
+export default async function Home() {
+  const session = await auth();
+
+  if (session?.user?.role) {
+    redirect(getPortalPathForUserRole(session.user.role));
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="mx-auto flex w-full max-w-6xl flex-1 items-center px-5 py-6 sm:px-6 sm:py-10 lg:px-10">
+      <section className="relative w-full overflow-hidden rounded-[2rem] border border-white/70 bg-[linear-gradient(135deg,#fbfdff_0%,#eef4f8_55%,#e8eff4_100%)] shadow-[0_28px_80px_rgba(18,55,79,0.10)]">
+
+        {/* Dynamic Atmosphere Glows */}
+        <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-brand/10 blur-3xl" />
+        <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-brand-accent/10 blur-3xl" />
+
+        <div className="relative z-10 grid gap-10 px-6 py-8 sm:px-8 md:px-10 lg:grid-cols-[1.25fr_380px] lg:gap-12 lg:py-12">
+          <div className="max-w-2xl space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border border-[#d8e1e8] bg-white shadow-[0_10px_24px_rgba(16,51,76,0.08)] transition-transform hover:scale-105">
+                <Image
+                  src="/government-logo.png"
+                  alt="Government of Nauru crest"
+                  fill
+                  sizes="80px"
+                  className="object-contain p-2"
+                  priority
+                />
+              </div>
+              <div className="transition-all duration-300">
+                <p className="font-mono text-[10px] font-medium uppercase tracking-[0.34em] text-brand-accent">Civil Aviation</p>
+                <div className="mt-2 space-y-0.5 text-brand">
+                  <p className="text-lg font-semibold sm:text-xl">Department of Transport</p>
+                  <p className="text-sm font-medium text-slate-700 sm:text-base">Republic of Nauru</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h1 className="max-w-xl text-2xl font-bold tracking-[-0.04em] text-[#0a253d] sm:text-3xl lg:text-4xl">
+                Streamlined aviation permit processing.
+              </h1>
+              <p className="max-w-xl text-base leading-8 text-slate-600">
+                Submit, review, approve, and track landing or overflight permits through one professional workflow.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:max-w-xl sm:grid-cols-1">
+              {workflowPoints.map((point) => (
+                <div key={point} className="group flex items-start gap-3 rounded-2xl border border-white/75 bg-white/72 px-4 py-3 shadow-[0_10px_22px_rgba(20,59,86,0.05)] transition-all duration-200 hover:-translate-y-1 hover:bg-white hover:shadow-md">
+                  <span className="mt-1 inline-flex h-5 w-5 items-center justify-center rounded-full bg-brand transition-colors group-hover:bg-[#083d59]">
+                    <span className="h-2 w-2 rounded-full bg-white" />
+                  </span>
+                  <p className="text-sm leading-6 text-slate-700 group-hover:text-slate-900">{point}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center lg:justify-end">
+            <div className="w-full max-w-[380px] rounded-[1.75rem] border border-white/80 bg-white/90 p-6 shadow-[0_22px_50px_rgba(16,51,76,0.10)] backdrop-blur-sm sm:p-7">
+              <p className="font-mono text-[11px] uppercase tracking-[0.28em] text-brand-accent">Secure Access</p>
+              <h2 className="mt-3 text-2xl font-semibold text-brand">Sign in to continue</h2>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Access is routed automatically to the correct portal based on your assigned role.</p>
+
+              <div className="mt-6 space-y-3">
+                <Link
+                  href="/login"
+                  className="flex w-full items-center justify-center rounded-full bg-brand px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-[#083d59] hover:shadow-lg active:scale-[0.98]"
+                  style={{ color: "#ffffff" }}
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/register"
+                  className="flex w-full items-center justify-center rounded-full border border-[#c9d8e2] bg-white px-6 py-3 text-sm font-semibold text-brand transition-all hover:bg-[#f3f8fb] hover:border-brand/30 active:scale-[0.98]"
+                >
+                  Register Airline
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+
+      </section>
+    </main>
   );
 }
