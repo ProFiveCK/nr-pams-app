@@ -18,6 +18,7 @@ services:
       retries: 5
 
   pams-web:
+    image: nr-pams-pams-web
     build:
       context: .
       dockerfile: Dockerfile
@@ -40,6 +41,7 @@ services:
         condition: service_healthy
 
   pams-migrate:
+    image: nr-pams-pams-web
     build:
       context: .
       dockerfile: Dockerfile
@@ -52,6 +54,25 @@ services:
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pams-postgres:5432/${POSTGRES_DB}
     command: ["npx", "prisma", "migrate", "deploy"]
+    depends_on:
+      pams-postgres:
+        condition: service_healthy
+
+  pams-seed:
+    image: nr-pams-pams-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pams-postgres:5432/${POSTGRES_DB}
+    profiles:
+      - tools
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@pams-postgres:5432/${POSTGRES_DB}
+      SEED_USER_PASSWORD: ${SEED_USER_PASSWORD:?Set SEED_USER_PASSWORD in .env before seeding users}
+    command: ["npm", "run", "db:seed"]
     depends_on:
       pams-postgres:
         condition: service_healthy

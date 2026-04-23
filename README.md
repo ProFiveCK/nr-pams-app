@@ -87,56 +87,63 @@ Demo users use the password provided in `SEED_USER_PASSWORD` when `npm run db:se
 
 ## Production Deployment
 
-Clone the repository:
+Production deployment is Docker-first. Clone the repository:
 
 ```bash
 git clone https://github.com/ProFiveCK/nr-pams-app.git
 cd nr-pams-app
 ```
 
-Install dependencies:
-
-```bash
-npm ci
-```
-
-Create production `.env`:
+Create production `.env` from the committed example:
 
 ```bash
 cp .env.example .env
 ```
 
-Set production values:
+Generate secrets:
 
-- `DATABASE_URL`: PostgreSQL connection string for the production database.
+```bash
+openssl rand -base64 32
+```
+
+Edit `.env` and set real production values:
+
+- `POSTGRES_USER`: database username, for example `pams_user`.
+- `POSTGRES_PASSWORD`: strong database password.
+- `POSTGRES_DB`: database name, for example `pams`.
+- `POSTGRES_PORT`: host-only PostgreSQL port, for example `5433`.
+- `PAMS_WEB_PORT`: host web port, for example `3002`.
 - `NEXTAUTH_SECRET`: long random secret from `openssl rand -base64 32`.
 - `NEXTAUTH_URL`: public app URL, for example `https://pams.example.gov.nr`.
 - `AUTH_TRUST_HOST`: set to `true` behind a reverse proxy.
 - `NEXT_PUBLIC_APP_URL`: public app URL used in password reset links.
+- `SEED_USER_PASSWORD`: temporary initial password used only when creating seeded login accounts.
 
-Apply migrations:
-
-```bash
-npx prisma migrate deploy
-```
-
-Build:
+Start PostgreSQL and the web app:
 
 ```bash
-npm run build
+docker compose up -d --build pams-postgres pams-web
 ```
 
-Start:
+Apply database migrations:
 
 ```bash
-npm run start -- -p 3002
+docker compose --profile tools run --rm pams-migrate
 ```
 
-For production, run the app behind a process manager such as `pm2` or `systemd`, then configure Nginx or another reverse proxy to forward HTTPS traffic to port `3002`.
+Create initial login accounts, if needed:
+
+```bash
+docker compose --profile tools run --rm pams-seed
+```
+
+After seeding, sign in with one of the demo account emails below and the password from `SEED_USER_PASSWORD`. Change or disable seeded accounts before live production use.
+
+Configure Nginx or another reverse proxy to forward HTTPS traffic to `PAMS_WEB_PORT`.
 
 ## Docker Notes
 
-The repo includes a full Docker Compose stack for the web app and PostgreSQL.
+The repo includes a full Docker Compose stack for the web app, PostgreSQL, migrations, and optional seed-user creation.
 
 First-time Docker setup:
 
@@ -168,7 +175,7 @@ docker compose --profile tools run --rm pams-migrate
 Seed demo users, if needed:
 
 ```bash
-docker compose exec pams-web npm run db:seed
+docker compose --profile tools run --rm pams-seed
 ```
 
 Restart after pulling changes:
