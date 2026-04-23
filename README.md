@@ -39,8 +39,13 @@ cp .env.example .env
 Update `.env` for your local PostgreSQL database:
 
 ```bash
-DATABASE_URL="postgresql://postgres:password@localhost:5433/pams"
-NEXTAUTH_SECRET="replace-with-a-long-random-secret"
+POSTGRES_USER="pams_user"
+POSTGRES_PASSWORD="set-a-strong-database-password"
+POSTGRES_DB="pams"
+POSTGRES_PORT=5433
+PAMS_WEB_PORT=3002
+DATABASE_URL="postgresql://pams_user:set-a-strong-database-password@localhost:5433/pams"
+NEXTAUTH_SECRET="generate-with-openssl-rand-base64-32"
 NEXTAUTH_URL="http://localhost:3002"
 AUTH_TRUST_HOST=true
 NEXT_PUBLIC_APP_URL="http://localhost:3002"
@@ -104,7 +109,7 @@ cp .env.example .env
 Set production values:
 
 - `DATABASE_URL`: PostgreSQL connection string for the production database.
-- `NEXTAUTH_SECRET`: long random secret.
+- `NEXTAUTH_SECRET`: long random secret from `openssl rand -base64 32`.
 - `NEXTAUTH_URL`: public app URL, for example `https://pams.example.gov.nr`.
 - `AUTH_TRUST_HOST`: set to `true` behind a reverse proxy.
 - `NEXT_PUBLIC_APP_URL`: public app URL used in password reset links.
@@ -131,18 +136,47 @@ For production, run the app behind a process manager such as `pm2` or `systemd`,
 
 ## Docker Notes
 
-The included `Dockerfile` builds the web app only. If deploying with Docker Compose, provide a PostgreSQL service and pass the same environment variables listed above to the app container.
+The repo includes a full Docker Compose stack for the web app and PostgreSQL.
 
-After rebuilding the app container:
+First-time Docker setup:
 
 ```bash
-docker compose up -d --build pams-web
+cp .env.example .env
+openssl rand -base64 32
 ```
 
-Run migrations against the production database before client testing:
+Edit `.env` and set strong production values for:
+
+- `POSTGRES_PASSWORD`
+- `NEXTAUTH_SECRET`
+- `NEXTAUTH_URL`
+- `NEXT_PUBLIC_APP_URL`
+- `SEED_USER_PASSWORD`, only if you plan to seed demo users
+
+Build and start PostgreSQL plus the app:
 
 ```bash
-docker compose exec pams-web npx prisma migrate deploy
+docker compose up -d --build pams-postgres pams-web
+```
+
+Apply migrations:
+
+```bash
+docker compose --profile tools run --rm pams-migrate
+```
+
+Seed demo users, if needed:
+
+```bash
+docker compose exec pams-web npm run db:seed
+```
+
+Restart after pulling changes:
+
+```bash
+git pull origin main
+docker compose up -d --build pams-web
+docker compose --profile tools run --rm pams-migrate
 ```
 
 ## SMTP And Password Reset

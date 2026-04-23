@@ -16,6 +16,13 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+ARG DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+ENV DATABASE_URL=$DATABASE_URL
+ENV NEXTAUTH_SECRET="build-time-placeholder"
+ENV NEXTAUTH_URL="http://localhost:3002"
+ENV AUTH_TRUST_HOST=true
+ENV NEXT_PUBLIC_APP_URL="http://localhost:3002"
+
 # Build the Next.js application
 RUN npm run build
 
