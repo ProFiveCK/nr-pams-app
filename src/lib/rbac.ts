@@ -19,6 +19,11 @@ export function canAccessPortal(roleSegment: string, userRole: UserRole) {
     return true;
   }
 
+  // FINANCE users share the employee portal
+  if (userRole === "FINANCE" && roleSegment === "employee") {
+    return true;
+  }
+
   const targetRole = portalRoleMap[roleSegment as PortalRole];
   return Boolean(targetRole && targetRole === userRole);
 }
